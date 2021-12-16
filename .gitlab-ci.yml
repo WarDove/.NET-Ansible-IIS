@@ -1,0 +1,103 @@
+variables:
+
+  BUILD_ARTIFACT_PATH: $CI_BUILDS_DIR/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME/$BUILD_FOLDER
+
+
+before_script: 
+
+  - echo "IMAGE INTERNAL LOCATION IS $PWD"
+  - echo "FULL ARTIFACT PATH IS $BUILD_ARTIFACT_PATH"
+  - echo "SYSTEM INFO:"
+  - cat /etc/os-release
+  - cat /etc/hostname
+
+
+image: mcr.microsoft.com/dotnet/sdk:6.0-alpine3.14
+
+Build project:
+
+  stage: build
+
+  tags:
+
+    - dind-1 
+  script:
+
+    - dotnet publish -o $BUILD_FOLDER 
+  artifacts:
+
+    paths:
+
+      - $BUILD_FOLDER
+
+    expire_in: 1 day
+
+
+Test project:
+  stage: test
+  tags:
+    - dind-1 
+  script:
+    - dotnet test -o $BUILD_FOLDER 
+
+
+Deploy to Test:  
+
+  stage: deploy
+
+  image: wardove/ansible:1.1.9-ubuntu-20.04
+
+  tags:
+
+    - dind-1
+  
+  variables:
+        
+    POOL_NAME: TESTPOOL
+    WEB_NAME: tarlan-deploy-test
+    WEB_HOSTNAME: tarlan-deploy-test.com
+    WEB_PATH: C:\test-site\
+    WEB_LOG_PATH: C:\test-site\Log\
+    APP_PATH: C:\test-site\
+    APP_NAME: tarlan-deploy-test
+
+  script:    
+
+    - bash /ansible/scripts/set_variables.sh
+    - cat /ansible/host_vars/$IIS_SERVER.yml
+    - ansible-playbook /ansible/deploy.yml -i /ansible/hosts 
+
+  environment: test
+
+  only:
+
+    - merge_requests
+    - master
+
+
+
+Deploy to Prod:
+
+  stage: deploy
+
+  image: wardove/ansible:1.1.9-ubuntu-20.04
+
+  tags:
+
+    - dind-1
+
+  script:    
+
+    - bash /ansible/scripts/set_variables.sh
+    - cat /ansible/host_vars/$IIS_SERVER.yml
+    - ansible-playbook /ansible/deploy.yml -i /ansible/hosts -vvvv
+
+  environment: production
+
+  only:
+
+    - merge_requests
+    - master
+
+  when: manual
+

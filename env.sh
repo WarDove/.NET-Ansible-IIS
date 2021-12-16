@@ -1,6 +1,5 @@
 #!/bin/bash
 export IIS_SERVER=10.180.10.75
-export IIS_SERVER_TEST=none
 export ANSIBLE_USER=administrator
 export ANSIBLE_PASS=Admin123
 export POOL_NAME=TESTPOOL
