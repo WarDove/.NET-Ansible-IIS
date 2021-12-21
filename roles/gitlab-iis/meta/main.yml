@@ -1,0 +1,22 @@
+galaxy_info:
+  author: Tarlan Huseynov
+  role_name: gitlab-iis
+  description: Gitlab DinD container image for .Net Core deployments to IIS.
+  company: DPC Azerbaijan
+  license: license (GPL-2.0-or-later, MIT, etc)
+
+  min_ansible_version: 5
+
+  # Container suitable platform 
+
+  platforms:
+  - name: Ubuntu
+    versions:
+    - 20.04
+  - name: Alpine
+    versions:
+    - 3.14
+
+  galaxy_tags: [gitlab-ci, IIS, .NET, Gitlab ci-cd, dotnet publish]
+
+dependencies: [python3, pip, pywinrm>=0.2.2] 

@@ -1,0 +1,44 @@
+# tasks file for gitlab-iis
+---
+- name: Creating website folder on IIS
+  ansible.windows.win_file:
+    path: "{{ lookup('env','WEB_PATH') }}"
+    state: directory
+
+- name: Creating application folder on IIS
+  ansible.windows.win_file:
+    path: "{{ lookup('env','APP_PATH') }}"
+    state: directory
+
+- name: Copy built-app folder contents recursively to IIS APP folder
+  ansible.windows.win_copy:
+    src: "{{ lookup('env','BUILD_ARTIFACT_PATH') }}"
+    dest: "{{ lookup('env','APP_PATH') }}"
+
+
+- name: Create a new application pool in 'Started' state
+  community.windows.win_iis_webapppool:
+    name: "{{ lookup('env','POOL_NAME') }}"
+    state: started
+
+- name: Crate IIS site
+  community.windows.win_iis_website:
+    name: "{{ lookup('env','WEB_NAME') }}"
+    state: started
+    port: "{{ lookup('env','WEB_PORT') }}"
+    ip: "{{ lookup('env','WEB_IP') }}"
+    hostname: "{{ lookup('env','WEB_HOSTNAME') }}"
+    application_pool: "{{ lookup('env','POOL_NAME') }}"
+    physical_path: "{{ lookup('env','WEB_PATH') }}"
+    parameters: logfile.directory:{{ lookup('env','WEB_LOG_PATH') }}
+  register: website
+
+
+- name: Add webapplication on IIS.
+  community.windows.win_iis_webapplication:
+    name: "{{ lookup('env','APP_NAME') }}"
+    site: "{{ lookup('env','WEB_NAME') }}"
+    state: present
+    physical_path: "{{ lookup('env','APP_PATH') }}"
+  when: "{{ lookup('env','MULTI_APP_WEBSITE') }}==1"
+...

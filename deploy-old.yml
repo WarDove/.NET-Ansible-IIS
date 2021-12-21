@@ -9,10 +9,15 @@
         path: "{{ lookup('env','WEB_PATH') }}"
         state: directory
 
-    - name: Copy built-app folder contents recursively to IIS WEB folder
+    - name: Creating application folder on IIS
+      ansible.windows.win_file:
+        path: "{{ lookup('env','APP_PATH') }}"
+        state: directory
+
+    - name: Copy built-app folder contents recursively to IIS APP folder
       ansible.windows.win_copy:
         src: "{{ lookup('env','BUILD_ARTIFACT_PATH') }}"
-        dest: "{{ lookup('env','WEB_PATH') }}"
+        dest: "{{ lookup('env','APP_PATH') }}"
 
 
     
@@ -38,9 +43,12 @@
         parameters: logfile.directory:{{ lookup('env','WEB_LOG_PATH') }}
       register: website
 
-    - name: IIS Pool Info
-      debug:
-        var: website
 
-
+    - name: Add webapplication on IIS.
+      community.windows.win_iis_webapplication:
+        name: "{{ lookup('env','APP_NAME') }}"
+        site: "{{ lookup('env','WEB_NAME') }}"
+        state: present
+        physical_path: "{{ lookup('env','APP_PATH') }}"
+      when: "{{ lookup('env','MULTI_APP_WEBSITE') }}==1"
 ...
