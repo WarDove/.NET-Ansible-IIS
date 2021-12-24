@@ -1,5 +1,5 @@
 ---
-- name: Creating folder and moving binaries to IIS
+- name: .NET CORE APPLICATION IIS SERVER DEPLOYMENT
   hosts: "{{ lookup('env','IIS_SERVER') }}"
   gather_facts: no
   tasks:
@@ -9,17 +9,21 @@
         path: "{{ lookup('env','WEB_PATH') }}"
         state: directory
 
+    - name: Crate IIS site
+      community.windows.win_iis_website:
+        name: "{{ lookup('env','WEB_NAME') }}"
+        state: stopped
+        port: "{{ lookup('env','WEB_PORT') }}"
+        ip: "{{ lookup('env','WEB_IP') }}"
+        hostname: "{{ lookup('env','WEB_HOSTNAME') }}"
+        application_pool: "{{ lookup('env','POOL_NAME') }}"
+        physical_path: "{{ lookup('env','WEB_PATH') }}"
+        parameters: logfile.directory:{{ lookup('env','WEB_LOG_PATH') }}
+
     - name: Copy built-app folder contents recursively to IIS WEB folder
       ansible.windows.win_copy:
         src: "{{ lookup('env','BUILD_ARTIFACT_PATH') }}"
         dest: "{{ lookup('env','WEB_PATH') }}"
-
-
-    
-- name: Creating Webpool Site Api
-  hosts: "{{ lookup('env','IIS_SERVER') }}"
-  gather_facts: no
-  tasks:
 
     - name: Create a new application pool in 'Started' state
       community.windows.win_iis_webapppool:
@@ -30,12 +34,6 @@
       community.windows.win_iis_website:
         name: "{{ lookup('env','WEB_NAME') }}"
         state: started
-        port: "{{ lookup('env','WEB_PORT') }}"
-        ip: "{{ lookup('env','WEB_IP') }}"
-        hostname: "{{ lookup('env','WEB_HOSTNAME') }}"
-        application_pool: "{{ lookup('env','POOL_NAME') }}"
-        physical_path: "{{ lookup('env','WEB_PATH') }}"
-        parameters: logfile.directory:{{ lookup('env','WEB_LOG_PATH') }}
       register: website
 
     - name: IIS Pool Info
