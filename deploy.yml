@@ -14,30 +14,22 @@
         name: "{{ lookup('env','POOL_NAME') }}"
         state: started
 
-    - name: Crate IIS site
+    - name: Crate IIS site and stop for update
       community.windows.win_iis_website:
         name: "{{ lookup('env','WEB_NAME') }}"
-        state: started
+        state: stopped
         port: "{{ lookup('env','WEB_PORT') }}"
         ip: "{{ lookup('env','WEB_IP') }}"
         hostname: "{{ lookup('env','WEB_HOSTNAME') }}"
         application_pool: "{{ lookup('env','POOL_NAME') }}"
         physical_path: "{{ lookup('env','WEB_PATH') }}"
-        parameters: logfile.directory:{{ lookup('env','WEB_LOG_PATH') }}
     
-    - name: Stop IIS site for update
-      community.windows.win_iis_website:
-        name: "{{ lookup('env','WEB_NAME') }}"
-        state: stopped
-      register: website
-
-
     - name: Copy built-app folder contents recursively to IIS WEB folder
       ansible.windows.win_copy:
         src: "{{ lookup('env','BUILD_ARTIFACT_PATH') }}"
         dest: "{{ lookup('env','WEB_PATH') }}"
 
-    - name: Start IIS site.
+    - name: Start IIS site
       community.windows.win_iis_website:
         name: "{{ lookup('env','WEB_NAME') }}"
         state: started
