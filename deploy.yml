@@ -9,10 +9,10 @@
         path: "{{ lookup('env','WEB_PATH') }}"
         state: directory
 
-    - name: Create a new application pool in 'Started' state
+    - name: Create a new application pool in 'Stopped' state
       community.windows.win_iis_webapppool:
         name: "{{ lookup('env','POOL_NAME') }}"
-        state: started
+        state: stopped
 
     - name: Crate IIS site and stop for update
       community.windows.win_iis_website:
@@ -28,6 +28,11 @@
       ansible.windows.win_copy:
         src: "{{ lookup('env','BUILD_ARTIFACT_PATH') }}"
         dest: "{{ lookup('env','WEB_PATH') }}"
+
+    - name: Start application pool
+      community.windows.win_iis_webapppool:
+        name: "{{ lookup('env','POOL_NAME') }}"
+        state: started
 
     - name: Start IIS site
       community.windows.win_iis_website:
